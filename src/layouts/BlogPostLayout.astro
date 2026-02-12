@@ -1,0 +1,17 @@
+---
+import Figure from "../components/Figure.astro";
+
+const { post, Content } = Astro.props;
+
+let figureIndex = 0;
+
+const components = {
+  Figure,
+};
+---
+
+<Content
+  components={components}
+  slug={post.slug}
+  nextFigure={() => ++figureIndex}
+/>

@@ -1,0 +1,53 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import BlogPostLayout from "../../../layouts/BlogPostLayout.astro";
+import { getCollection } from "astro:content";
+import { resolvePostImage } from "../../../lib/resolvePostImage";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog-en");
+
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+
+const { Content } = await post.render();
+
+const lang = "en";
+
+const thumbnailModule =
+  post.data.thumbnail
+    ? resolvePostImage(
+        post.slug,
+        lang,
+        post.data.thumbnail
+      )
+    : null;
+
+const thumbnailUrl =
+  thumbnailModule?.src ?? null;
+---
+
+<BaseLayout
+  lang="en"
+  title={`${post.data.title} | J-IMPACT`}
+  description={post.data.description}
+  ogType="article"
+  thumbnail={thumbnailUrl}
+  canonicalPath={`/en/blog/${post.slug}/`}
+  alternates={{
+    en: `/en/blog/${post.slug}/`,
+    ja: `/ja/blog/${post.slug}/`,
+    xDefault: `/ja/blog/${post.slug}/`
+  }}
+  langSwitchHref={`/ja/blog/${post.slug}/`}
+>
+  <BlogPostLayout
+    post={post}
+    Content={Content}
+  />
+</BaseLayout>

@@ -1,0 +1,11 @@
+---
+import Figure from "./Figure.astro";
+
+const { slug, nextFigure, ...props } = Astro.props;
+---
+
+<Figure
+  {...props}
+  slug={slug}
+  nextFigure={nextFigure}
+/>

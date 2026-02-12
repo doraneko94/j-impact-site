@@ -1,0 +1,92 @@
+---
+import "../styles/global.css";
+
+const {
+  title = "J-IMPACT",
+  lang = "ja", // "ja" | "en"
+  description = "",
+  ogType = "website", // "article" | "website"
+  thumbnail, // "/images/..." (language-specific allowed)
+  canonicalPath, // "/ja/..." or "/en/..."
+  alternates, // { ja: "/ja/...", en: "/en/...", xDefault?: "/ja/..." }
+  langSwitchHref, // header language switch destination (same slug if exists)
+} = Astro.props;
+
+// absolute url builder
+const abs = (p) => new URL(p, Astro.site).toString();
+
+// OGP image: per-page thumbnail > lang default
+const defaultOg =
+  lang === "en" ? "/images/ogp/default-en.jpg" : "src/assets/ogp/default-ja.jpg";
+const ogImage = thumbnail ?? defaultOg;
+
+// canonical: fall back to current URL path
+const canonical = canonicalPath ? abs(canonicalPath) : Astro.url.toString();
+
+// hreflang alternates
+const altJa = alternates?.ja ? abs(alternates.ja) : null;
+const altEn = alternates?.en ? abs(alternates.en) : null;
+const altX = alternates?.xDefault
+  ? abs(alternates.xDefault)
+  : (altJa ?? canonical);
+---
+
+<!DOCTYPE html>
+<html lang={lang}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    {/* hreflang */}
+    {altJa && <link rel="alternate" hreflang="ja" href={altJa} />}
+    {altEn && <link rel="alternate" hreflang="en" href={altEn} />}
+    <link rel="alternate" hreflang="x-default" href={altX} />
+
+    {/* OGP */}
+    <meta property="og:title" content={title} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:description" content={description} />
+    <meta property="og:locale" content={lang === "en" ? "en_US" : "ja_JP"} />
+    <meta property="og:image" content={abs(ogImage)} />
+  </head>
+
+  <body>
+    <header>
+      <h1>
+        <a href={lang === "en" ? "/en/" : "/ja/"}>J-IMPACT</a>
+      </h1>
+
+      <nav>
+        {lang === "ja" ? (
+          <>
+            <strong>日本語</strong>
+            {" | "}
+            <a href={langSwitchHref ?? "/en/"}>English</a>
+          </>
+        ) : (
+          <>
+            <a href={langSwitchHref ?? "/ja/"}>日本語</a>
+            {" | "}
+            <strong>English</strong>
+          </>
+        )}
+      </nav>
+
+      <hr />
+    </header>
+
+
+    <main>
+      <slot />
+    </main>
+
+    <footer>
+      <hr />
+      <p>© 2026 J-IMPACT</p>
+    </footer>
+  </body>
+</html>

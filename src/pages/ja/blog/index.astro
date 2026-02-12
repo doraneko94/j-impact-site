@@ -1,0 +1,69 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+import { Image } from "astro:assets";
+import { resolvePostImage } from "../../../lib/resolvePostImage";
+
+const posts = await getCollection("blog-ja");
+
+// 新しい順
+posts.sort(
+  (a, b) =>
+    new Date(b.data.date).getTime() -
+    new Date(a.data.date).getTime()
+);
+---
+
+<BaseLayout
+  lang="ja"
+  title="技術ブログ | J-IMPACT"
+  description="J-IMPACTの技術ブログ。電子回路・組込みRust・信号処理。"
+  canonicalPath="/ja/blog/"
+  alternates={{
+    ja: "/ja/blog/",
+    en: "/en/blog/",
+    xDefault: "/ja/blog/"
+  }}
+  langSwitchHref="/en/blog/"
+>
+  <h2>技術ブログ</h2>
+
+  <ul style="list-style:none; padding:0;">
+    {posts.map((post) => {
+      const imageModule =
+        post.data.thumbnail
+          ? resolvePostImage(
+              post.slug,
+              "ja",
+              post.data.thumbnail
+            )
+          : null;
+
+      return (
+        <li style="margin-bottom:3rem;">
+          {imageModule && (
+            <Image
+              src={imageModule}
+              alt={post.data.title}
+              width={600}
+              loading="lazy"
+              format="webp"
+              style="display:block; margin-bottom:0.75rem;"
+            />
+          )}
+
+          <a
+            href={`/ja/blog/${post.slug}/`}
+            style="font-size:1.3rem; font-weight:bold;"
+          >
+            {post.data.title}
+          </a>
+
+          <p style="margin-top:0.5rem;">
+            {post.data.description}
+          </p>
+        </li>
+      );
+    })}
+  </ul>
+</BaseLayout>

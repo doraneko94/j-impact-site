@@ -1,0 +1,59 @@
+---
+import { Image } from "astro:assets";
+import { resolvePostImage } from "../lib/resolvePostImage";
+
+const {
+  slug,
+  file,
+  alt,
+  caption,
+  nextFigure,
+} = Astro.props;
+
+// URLから言語判定
+const segments = Astro.url.pathname.split("/").filter(Boolean);
+const lang = segments[0] === "en" ? "en" : "ja";
+
+// slugフォールバック
+const resolvedSlug =
+  slug ?? segments[segments.length - 1];
+
+if (!resolvedSlug) {
+  throw new Error("Figure: slug が渡されていません");
+}
+
+// 🔥 ここが重要：image moduleを取得
+const imageModule =
+  resolvePostImage(resolvedSlug, lang, file);
+
+if (!imageModule) {
+  throw new Error(
+    `Image not found: ${resolvedSlug}/${file}`
+  );
+}
+
+// 図番号
+const index = nextFigure ? nextFigure() : null;
+
+const label =
+  lang === "en"
+    ? `Fig. ${index ?? ""}`
+    : `図${index ?? ""}`;
+---
+
+<figure>
+  <Image
+    src={imageModule}
+    alt={alt}
+    loading="lazy"
+    sizes="(max-width: 900px) 100vw, 900px"
+    format="webp"
+  />
+
+  {caption && (
+    <figcaption>
+      {index ? `${label}: ` : ""}
+      {caption}
+    </figcaption>
+  )}
+</figure>
