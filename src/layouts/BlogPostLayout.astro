@@ -1,17 +1,24 @@
 ---
 import Figure from "../components/Figure.astro";
 
-const { post, Content } = Astro.props;
-
-let figureIndex = 0;
+const { post, Content, thumbnailUrl } = Astro.props;
 
 const components = {
   Figure,
 };
 ---
 
-<Content
-  components={components}
-  slug={post.slug}
-  nextFigure={() => ++figureIndex}
-/>
+<article class="blog-content">
+  {thumbnailUrl && (
+    <div class="post-hero">
+      <img src={thumbnailUrl} alt={post.data.title} loading="eager" />
+    </div>
+  )}
+
+  <h1 class="post-title">{post.data.title}</h1>
+
+  <Content
+    components={components}
+    slug={post.slug}
+  />
+</article>

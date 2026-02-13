@@ -24,7 +24,29 @@ const blogEn = defineCollection({
   }),
 });
 
+const pageJa = defineCollection({
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    pubDate: z.date(),
+    updateDate: z.date(),
+    thumbnail: z.string().optional(),
+  })
+});
+
+const pageEn = defineCollection({
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    pubDate: z.date(),
+    updateDate: z.date(),
+    thumbnail: z.string().optional(),
+  })
+});
+
 export const collections = {
   "blog-ja": blogJa,
   "blog-en": blogEn,
+  "page-ja": pageJa,
+  "page-en": pageEn,
 };

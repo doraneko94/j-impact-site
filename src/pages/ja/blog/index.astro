@@ -1,69 +1,72 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
-import { Image } from "astro:assets";
 import { resolvePostImage } from "../../../lib/resolvePostImage";
+import { CATEGORIES } from "../../../data/categories";
 
 const posts = await getCollection("blog-ja");
 
-// 新しい順
-posts.sort(
-  (a, b) =>
-    new Date(b.data.date).getTime() -
-    new Date(a.data.date).getTime()
-);
+// 最新順
+const sortedPosts = posts
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 12);  // ★ 最大12件（3列×4行）
+
+const lang = "ja";
 ---
 
 <BaseLayout
   lang="ja"
   title="技術ブログ | J-IMPACT"
-  description="J-IMPACTの技術ブログ。電子回路・組込みRust・信号処理。"
-  canonicalPath="/ja/blog/"
-  alternates={{
-    ja: "/ja/blog/",
-    en: "/en/blog/",
-    xDefault: "/ja/blog/"
-  }}
-  langSwitchHref="/en/blog/"
+  description="J-IMPACTの技術ブログ一覧"
 >
-  <h2>技術ブログ</h2>
 
-  <ul style="list-style:none; padding:0;">
-    {posts.map((post) => {
-      const imageModule =
+<section class="section container">
+  <h1 class="page-title">技術ブログ</h1>
+
+  <div class="post-grid">
+    {sortedPosts.map((post) => {
+      const thumbnailModule =
         post.data.thumbnail
           ? resolvePostImage(
               post.slug,
-              "ja",
+              lang,
               post.data.thumbnail
             )
           : null;
 
+      const thumbnailUrl = thumbnailModule?.src ?? null;
+
+      const categoryLabel =
+        CATEGORIES[post.data.category]?.ja ??
+        post.data.category;
+
       return (
-        <li style="margin-bottom:3rem;">
-          {imageModule && (
-            <Image
-              src={imageModule}
+        <a class="post-card" href={`/ja/blog/${post.slug}/`}>
+          <div class="post-card__image">
+          {thumbnailUrl && (
+            <img
+              src={thumbnailUrl}
               alt={post.data.title}
-              width={600}
               loading="lazy"
-              format="webp"
-              style="display:block; margin-bottom:0.75rem;"
             />
           )}
+          </div>
 
-          <a
-            href={`/ja/blog/${post.slug}/`}
-            style="font-size:1.3rem; font-weight:bold;"
-          >
-            {post.data.title}
-          </a>
+          <div class="post-card__content">
+            <div class="post-card__meta">
+              <span class="category-badge">
+                {categoryLabel}
+              </span>
+            </div>
 
-          <p style="margin-top:0.5rem;">
-            {post.data.description}
-          </p>
-        </li>
+            <h3 class="post-card__title">{post.data.title}</h3>
+            <p class="post-card__description">{post.data.description}</p>
+            <span class="read-more">続きを読む</span>
+          </div>
+        </a>
       );
     })}
-  </ul>
+  </div>
+</section>
+
 </BaseLayout>

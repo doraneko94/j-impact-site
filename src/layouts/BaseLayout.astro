@@ -1,29 +1,33 @@
 ---
 import "../styles/global.css";
+import flagJa from "../assets/images/flag-ja.svg";
+import flagEn from "../assets/images/flag-en.svg";
 
 const {
   title = "J-IMPACT",
-  lang = "ja", // "ja" | "en"
+  lang = "ja",
   description = "",
-  ogType = "website", // "article" | "website"
-  thumbnail, // "/images/..." (language-specific allowed)
-  canonicalPath, // "/ja/..." or "/en/..."
-  alternates, // { ja: "/ja/...", en: "/en/...", xDefault?: "/ja/..." }
-  langSwitchHref, // header language switch destination (same slug if exists)
+  ogType = "website",
+  thumbnail,
+  canonicalPath,
+  alternates,
+  langSwitchHref,
+  fullWidth = false, // 🔥 追加
 } = Astro.props;
 
-// absolute url builder
 const abs = (p) => new URL(p, Astro.site).toString();
 
-// OGP image: per-page thumbnail > lang default
 const defaultOg =
-  lang === "en" ? "/images/ogp/default-en.jpg" : "src/assets/ogp/default-ja.jpg";
+  lang === "en"
+    ? "/images/ogp/default-en.jpg"
+    : "/images/ogp/default-ja.jpg";
+
 const ogImage = thumbnail ?? defaultOg;
 
-// canonical: fall back to current URL path
-const canonical = canonicalPath ? abs(canonicalPath) : Astro.url.toString();
+const canonical = canonicalPath
+  ? abs(canonicalPath)
+  : Astro.url.toString();
 
-// hreflang alternates
 const altJa = alternates?.ja ? abs(alternates.ja) : null;
 const altEn = alternates?.en ? abs(alternates.en) : null;
 const altX = alternates?.xDefault
@@ -33,60 +37,109 @@ const altX = alternates?.xDefault
 
 <!DOCTYPE html>
 <html lang={lang}>
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonical} />
 
-    <title>{title}</title>
-    <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
+  {altJa && <link rel="alternate" hreflang="ja" href={altJa} />}
+  {altEn && <link rel="alternate" hreflang="en" href={altEn} />}
+  <link rel="alternate" hreflang="x-default" href={altX} />
 
-    {/* hreflang */}
-    {altJa && <link rel="alternate" hreflang="ja" href={altJa} />}
-    {altEn && <link rel="alternate" hreflang="en" href={altEn} />}
-    <link rel="alternate" hreflang="x-default" href={altX} />
+  <meta property="og:title" content={title} />
+  <meta property="og:type" content={ogType} />
+  <meta property="og:description" content={description} />
+  <meta property="og:locale" content={lang === "en" ? "en_US" : "ja_JP"} />
+  <meta property="og:image" content={abs(ogImage)} />
+</head>
 
-    {/* OGP */}
-    <meta property="og:title" content={title} />
-    <meta property="og:type" content={ogType} />
-    <meta property="og:description" content={description} />
-    <meta property="og:locale" content={lang === "en" ? "en_US" : "ja_JP"} />
-    <meta property="og:image" content={abs(ogImage)} />
-  </head>
+<body>
 
-  <body>
-    <header>
-      <h1>
-        <a href={lang === "en" ? "/en/" : "/ja/"}>J-IMPACT</a>
-      </h1>
+<header class="navbar">
+  <div class="nav-container">
+    <div class="nav-logo">
+      <a href="/ja/"><span class="accent">J-IMPACT</span></a>
+    </div>
 
-      <nav>
-        {lang === "ja" ? (
-          <>
-            <strong>日本語</strong>
-            {" | "}
-            <a href={langSwitchHref ?? "/en/"}>English</a>
-          </>
-        ) : (
-          <>
-            <a href={langSwitchHref ?? "/ja/"}>日本語</a>
-            {" | "}
-            <strong>English</strong>
-          </>
-        )}
+    <div class="nav-right">
+      <div class="nav-cta">
+        <a href="/ja/books" class="cta-books">書籍を入手する</a>
+      </div>
+
+      <!-- ハンバーガートグル -->
+      <input type="checkbox" id="nav-toggle" class="nav-toggle" />
+      <label for="nav-toggle" class="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+        <div class="hamburger-label">MENU</div>
+      </label>
+
+      <nav class="nav-menu">
+        <a href="/ja/about">J-IMPACTについて</a>
+        <a href="/ja/blog/">技術ブログ</a>
+
+        <div class="lang-switch">
+          <a href="/ja/" class="flag-link">
+            <img src={flagJa.src} alt="Japanese" />
+          </a>
+          <a href="/en/" class="flag-link">
+            <img src={flagEn.src} alt="English" />
+          </a>
+        </div>
       </nav>
+    </div>
+  </div>
+</header>
 
-      <hr />
-    </header>
 
+<main>
+  <slot />
+</main>
 
-    <main>
-      <slot />
-    </main>
+<footer class="site-footer">
+  <div class="footer-container">
 
-    <footer>
-      <hr />
-      <p>© 2026 J-IMPACT</p>
-    </footer>
-  </body>
+    <!-- Xフォロー -->
+    <div class="footer-follow">
+      <a
+        href="https://x.com/your_account"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="x-link"
+      >
+        <svg class="x-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor"
+            d="M18.244 2H21l-6.56 7.49L22 22h-6.828l-5.35-6.99L3.75 22H1l7.06-8.06L2 2h6.93l4.86 6.36L18.244 2Zm-2.396 18h1.89L7.04 4H5.09l10.758 16Z"/>
+        </svg>
+        <span>Xでフォローする</span>
+      </a>
+    </div>
+
+    <!-- メインリンク -->
+    <div class="footer-links">
+      <a href="/ja/about">J-IMPACTについて</a>
+      <a href="/ja/blog/">技術ブログ</a>
+      <a href="/ja/books">書籍</a>
+      <a href="/ja/contact">お問い合わせ</a>
+    </div>
+
+    <!-- ポリシーリンク -->
+    <div class="footer-policies">
+      <a href="/ja/terms-of-use">ご利用条件</a>
+      <a href="/ja/privacy">プライバシー・ポリシー</a>
+      <a href="/ja/cookies">クッキー・ポリシー</a>
+      <a href="#" id="privacy-settings">プライバシー設定</a>
+    </div>
+
+    <div class="footer-copy">
+      © {new Date().getFullYear()} J-IMPACT
+    </div>
+
+  </div>
+</footer>
+
+</body>
 </html>
