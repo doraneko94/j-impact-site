@@ -1,58 +1,98 @@
 ---
 import "../styles/global.css";
+import { SITE, absUrl, defaultOgImagePath, type Lang } from "../lib/site";
+import type { OgType } from "../lib/seo";
 import flagJa from "../assets/images/flag-ja.svg";
 import flagEn from "../assets/images/flag-en.svg";
+import { undefined } from "astro:schema";
+
+export type Alternates = Partial<Record<Lang, string>>;
+
+export interface Props {
+  lang: Lang;
+  title: string;
+  description: string;
+
+  canonicalPath: string;
+  alternates?: Alternates;
+
+  thumbnail?: string;
+
+  ogType?: OgType;
+
+  // JSON-LD
+  jsonLd?: unknown;
+
+  noindex?: boolean;
+}
 
 const {
-  title = "J-IMPACT",
-  lang = "ja",
-  description = "",
-  ogType = "website",
-  thumbnail,
+  lang,
+  title,
+  description,
   canonicalPath,
-  alternates,
-  langSwitchHref,
-  fullWidth = false, // 🔥 追加
+  alternates = {},
+  thumbnail,
+  ogType = "website",
+  jsonLd,
+  noindex = false,
 } = Astro.props;
 
-const abs = (p) => new URL(p, Astro.site).toString();
-
-const defaultOg =
-  lang === "en"
-    ? "/images/ogp/default-en.jpg"
-    : "/images/ogp/default-ja.jpg";
-
-const ogImage = thumbnail ?? defaultOg;
+const ogImage = thumbnail ?? defaultOgImagePath(lang);
+const ogImageAbs = absUrl(ogImage);
 
 const canonical = canonicalPath
-  ? abs(canonicalPath)
+  ? absUrl(canonicalPath)
   : Astro.url.toString();
 
-const altJa = alternates?.ja ? abs(alternates.ja) : null;
-const altEn = alternates?.en ? abs(alternates.en) : null;
-const altX = alternates?.xDefault
-  ? abs(alternates.xDefault)
-  : (altJa ?? canonical);
+const altJa = alternates?.ja ?? null;
+const altEn = alternates?.en ?? null;
+
+const twitterSite = lang === "ja" ? SITE.twitterSites[0] : SITE.twitterSites[1];
+const get_book = lang === "ja" ? "書籍を入手する" : "Get the Book";
+const book = lang === "ja" ? "書籍" : "Book";
+const aboutus = lang === "ja" ? "J-IMPACTについて" : "About J-IMPACT";
+const blog = lang === "ja" ? "技術ブログ" : "Tech Blog";
+const contact = lang === "ja" ? "お問い合わせ" : "Contact Us";
+const follow = lang === "ja" ? "Xでフォローする" : "Follow on X";
+const account = lang === "ja" ? "j_impact_jp" : "j_impact_en";
+const x_url = `https://x.com/${account}`;
 ---
 
 <!DOCTYPE html>
 <html lang={lang}>
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  
   <title>{title}</title>
   <meta name="description" content={description} />
+  
   <link rel="canonical" href={canonical} />
 
   {altJa && <link rel="alternate" hreflang="ja" href={altJa} />}
   {altEn && <link rel="alternate" hreflang="en" href={altEn} />}
-  <link rel="alternate" hreflang="x-default" href={altX} />
+  {altEn && <link rel="alternate" hreflang="x-default" href={altEn} />}
 
-  <meta property="og:title" content={title} />
+  {noindex ? <meta name="robots" content="noindex,nofollow" /> : <meta name="robots" content="index,follow" />}
+  
+  <meta property="og:site_name" content={SITE.name} />
   <meta property="og:type" content={ogType} />
+  <meta property="og:locale" content={lang === "ja" ? "ja_JP" : "en_GB"} />
+  <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
-  <meta property="og:locale" content={lang === "en" ? "en_US" : "ja_JP"} />
-  <meta property="og:image" content={abs(ogImage)} />
+  <meta property="og:url" content={canonical} />
+  <meta property="og:image" content={ogImageAbs} />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  {twitterSite && <meta name="twitter:site" content={String(twitterSite)} />}
+  <meta name="twitter:title" content={title} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImageAbs} />
+
+  {jsonLd && (
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  )}
 </head>
 
 <body>
@@ -60,12 +100,12 @@ const altX = alternates?.xDefault
 <header class="navbar">
   <div class="nav-container">
     <div class="nav-logo">
-      <a href="/ja/"><span class="accent">J-IMPACT</span></a>
+      <a href={`/${lang}/`}><span class="accent">J-IMPACT</span></a>
     </div>
 
     <div class="nav-right">
       <div class="nav-cta">
-        <a href="/ja/books" class="cta-books">書籍を入手する</a>
+        <a href={`/${lang}/books`} class="cta-books">{get_book}</a>
       </div>
 
       <!-- ハンバーガートグル -->
@@ -78,14 +118,14 @@ const altX = alternates?.xDefault
       </label>
 
       <nav class="nav-menu">
-        <a href="/ja/about">J-IMPACTについて</a>
-        <a href="/ja/blog/">技術ブログ</a>
+        <a href={`/${lang}/about`}>{aboutus}</a>
+        <a href={`/${lang}/blog`}>{blog}</a>
 
         <div class="lang-switch">
-          <a href="/ja/" class="flag-link">
+          <a href={altJa} class="flag-link">
             <img src={flagJa.src} alt="Japanese" />
           </a>
-          <a href="/en/" class="flag-link">
+          <a href={altEn} class="flag-link">
             <img src={flagEn.src} alt="English" />
           </a>
         </div>
@@ -105,7 +145,7 @@ const altX = alternates?.xDefault
     <!-- Xフォロー -->
     <div class="footer-follow">
       <a
-        href="https://x.com/your_account"
+        href={x_url}
         target="_blank"
         rel="noopener noreferrer"
         class="x-link"
@@ -114,28 +154,27 @@ const altX = alternates?.xDefault
           <path fill="currentColor"
             d="M18.244 2H21l-6.56 7.49L22 22h-6.828l-5.35-6.99L3.75 22H1l7.06-8.06L2 2h6.93l4.86 6.36L18.244 2Zm-2.396 18h1.89L7.04 4H5.09l10.758 16Z"/>
         </svg>
-        <span>Xでフォローする</span>
+        <span>{follow}</span>
       </a>
     </div>
 
     <!-- メインリンク -->
     <div class="footer-links">
-      <a href="/ja/about">J-IMPACTについて</a>
-      <a href="/ja/blog/">技術ブログ</a>
-      <a href="/ja/books">書籍</a>
-      <a href="/ja/contact">お問い合わせ</a>
+      <a href={`/${lang}/about`}>{aboutus}</a>
+      <a href={`/${lang}/blog`}>{blog}</a>
+      <a href={`/${lang}/books`}>{book}</a>
+      <a href={`/${lang}/contact`}>{contact}</a>
     </div>
 
     <!-- ポリシーリンク -->
     <div class="footer-policies">
-      <a href="/ja/terms-of-use">ご利用条件</a>
-      <a href="/ja/privacy">プライバシー・ポリシー</a>
-      <a href="/ja/cookies">クッキー・ポリシー</a>
-      <a href="#" id="privacy-settings">プライバシー設定</a>
+      <a href={`/${lang}/page/terms-of-use`}>{lang === "ja" ? "ご利用条件" : "Terms of Use"}</a>
+      <a href={`/${lang}/page/privacy`}>{lang === "ja" ? "プライバシー・ポリシー" : "Privacy Policy"}</a>
+      <a href={`/${lang}/page/cookies`}>{lang === "ja" ? "クッキー・ポリシー" : "Cookie Policy"}</a>
     </div>
 
     <div class="footer-copy">
-      © {new Date().getFullYear()} J-IMPACT
+      © 2024-2026 J-IMPACT
     </div>
 
   </div>

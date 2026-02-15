@@ -1,0 +1,54 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { getCollection, type CollectionEntry } from "astro:content";
+import { type Lang, SITE, supportedLang } from "../../../lib/site";
+import { alternatesAndCanonical, buildJsonLdArticle } from "../../../lib/seo";
+
+export async function getStaticPaths() {
+  const paths: Array<{ params: { lang: Lang; slug: string }; props: { post: CollectionEntry<`page-${Lang}`>; lang: Lang } }> = [];
+  
+  for (const lang of SITE.supportedLangs) {
+    const posts = await getCollection(`page-${lang}`);
+    for (const post of posts) {
+      if (post.data.isDraft) continue;
+
+      paths.push({
+        params: { lang, slug: post.slug },
+        props: { post, lang },
+      });
+    }
+  }
+  return paths;
+}
+
+const lang = supportedLang(Astro.params.lang);
+
+const { post } = Astro.props as { post: CollectionEntry<`page-${Lang}`>; lang: Lang };
+const { Content } = await post.render();
+
+const urlPathNoLang = `/page/${post.slug}/`;
+const { alternates, canonicalPath } = alternatesAndCanonical(urlPathNoLang, lang);
+
+const jsonLd = buildJsonLdArticle({
+  lang,
+  urlPath: canonicalPath,
+  headline: post.data.title,
+  description: post.data.description,
+  datePublished: post.data.date.toString(),
+  dateModified: post.data.updated?.toString() ?? post.data.date.toString(),
+});
+---
+
+<BaseLayout
+  lang={lang}
+  title={`${post.data.title} | J-IMPACT`}
+  description={post.data.description}
+  ogType="article"
+  canonicalPath={canonicalPath}
+  alternates={alternates}
+  jsonLd={jsonLd}
+>
+  <article class="blog-content">
+    <Content />
+  </article>
+</BaseLayout>

@@ -6,4 +6,5 @@ import mdx from '@astrojs/mdx';
 export default defineConfig({
     site: "https://j-impact.jp",
     integrations: [mdx()],
+    output: "static"
 });

@@ -297,6 +297,7 @@ a {
 
 .hero__text h1 {
   font-size: clamp(2.6rem, 4vw, 5rem);
+  
 }
 
 .hero__text p {
@@ -602,7 +603,7 @@ a {
 .pdf-banner {
   position: relative;
   width: 100%;
-  aspect-ratio: 2120 / 900;
+  aspect-ratio: 2120 / 1200;
 
   background-repeat: no-repeat;
   background-position: right center;
@@ -637,7 +638,15 @@ a {
 
 .pdf-banner__text h2 {
   margin: 0;
-  font-size: clamp(2rem, 4vw, 3rem);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  background-color: rgba(0,0,0,0.3);
+  color: var(--accent-orange);
+}
+
+.pdf-banner__text p {
+  margin: 10px 0 0 0;
+  font-size: clamp(1rem, 1.2vw, 1.5rem);
+  background-color: rgba(0,0,0,0.3);
   color: white;
 }
 

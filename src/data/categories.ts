@@ -1,4 +1,9 @@
-export const CATEGORIES = {
+type CategoryInfo = {
+  readonly ja: string;
+  readonly en: string;
+};
+
+export const CATEGORIES: Record<string, CategoryInfo> = {
   embedded: {
     ja: "組込み開発",
     en: "Embedded",

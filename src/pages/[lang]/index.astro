@@ -1,0 +1,131 @@
+---
+import { getCollection } from "astro:content";
+import { postImages } from "../../lib/imageRegistry";
+import { SITE, supportedLang } from "../../lib/site";
+import { alternatesAndCanonical } from "../../lib/seo";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import heroImage from "../../assets/images/hero.jpg";
+import pdfBanner from "../../assets/images/pdf-banner.jpg";
+import { resolveThumbnail } from "../../lib/resolvePostImage";
+import { CATEGORIES } from "../../data/categories";
+
+export async function getStaticPaths() {
+  return SITE.supportedLangs.map((lang) => ({
+    params: { lang },
+  }));
+}
+
+const lang = supportedLang(Astro.params.lang);
+const posts = await getCollection(`blog-${lang}`);
+const { alternates, canonicalPath } = alternatesAndCanonical("", lang);
+
+const latestPosts = posts
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3);
+
+const title_lang 
+  = lang === "ja"
+  ? "日本電算術研究所"
+  : "Japan - Institute of Mathematical Processing And Cyber Technology";
+const title = `J-IMPACT | ${title_lang}`;
+
+const description
+  = lang === "ja"
+  ? "J-IMPACT（日本電算術研究所）は、実装を通じて理論を現実に落とし込む技術情報を発信する研究所です。組込みRust、ソフトウェア無線、信号処理など、手を動かす人のための実践的な知見を公開しています。"
+  : "J-IMPACT is a research institute that publishes technical knowledge focused on translating theory into real-world implementation. We share practical insights in areas such as embedded Rust, software-defined radio, and signal processing, for those who learn by building and doing."
+
+const hero_h1 = lang === "ja" ? "実装主義" : "Implementation First.";
+const hero_p = lang === "ja" ? "手を動かす人のための研究所" : "A research institute for those who build.";
+const get_book = lang === "ja" ? "書籍を入手する" : "Get the Book";
+const see_blog = lang === "ja" ? "技術ブログをみる" : "Tech Blog";
+const tech_blog = lang === "ja" ? "最新の技術記事" : "Latest technical articles";
+const see_all = lang === "ja" ? "もっとみる →" : "Browse all →";
+const read_more = lang === "ja" ? "続きをみる" : "read more";
+const book_h2 = lang === "ja" ? "実装主義の技術書" : "A Practical Tech Book.";
+const book_p_1 = lang === "ja" ? "理論を現実の技術へと落とし込むための実践的資料。" : "Translating theory into working systems.";
+const book_p_2 = lang === "ja" ? "手を動かす人のために構成しています。" : "Designed for engineers who build and experiment.";
+---
+
+<BaseLayout
+  lang={lang}
+  title={title}
+  description={description}
+  canonicalPath={canonicalPath}
+  alternates={alternates}>
+
+<!-- Hero -->
+<section
+  class="hero"
+  style={`background-image: url(${heroImage.src});`}
+>
+  <div class="hero__overlay"></div>
+
+  <div class="hero__content">
+    <div class="hero__text">
+      <h1><span class="accent">{hero_h1}</span></h1>
+      <p>{hero_p}</p>
+    </div>
+
+    <div class="hero__buttons">
+      <a href="/books" class="btn primary">{get_book}</a>
+      <a href="/ja/blog" class="btn secondary">{see_blog}</a>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+<!-- 最新記事 -->
+<section class="latest-posts container">
+  <div class="section-header">
+    <h2 class="section-title">{tech_blog}</h2>
+    <a href="/ja/blog/" class="section-more">{see_all}</a>
+  </div>
+
+  <div class="post-grid">
+    {latestPosts.map((post) => {
+      const thumb = resolveThumbnail(post, lang);
+      const categoryLabel = CATEGORIES[post.data.category]?.ja ?? post.data.category;
+
+      return (
+        <a href={`/ja/blog/${post.slug}`} class="post-card">
+          <div class="post-card__image">
+            {thumb && <img src={thumb} alt={post.data.title} loading="lazy" />}
+          </div>
+          <div class="post-card__content">
+            <div class="post-card__meta">
+              <span class="category-badge">{categoryLabel}</span>
+            </div>
+
+            <h3 class="post-card__title">{post.data.title}</h3>
+            <p class="post-card__description">{post.data.description}</p>
+            <span class="read-more">{read_more}</span>
+          </div>
+        </a>
+      );
+    })}
+  </div>
+</section>
+
+<!-- PDF -->
+<section 
+  class="pdf-banner"
+  style={`background-image: url(${pdfBanner.src});`}
+>
+  <div class="pdf-banner__overlay"></div>
+
+  <div class="pdf-banner__content">
+    
+    <div class="pdf-banner__text">
+      <h2>{book_h2}</h2>
+      <p>{book_p_1}</p>
+      <p>{book_p_2}</p>
+    </div>
+
+    <div class="pdf-banner__buttons">
+      <a href="/books" class="btn primary">{get_book}</a>
+    </div>
+  </div>
+</section>
+</div>
+
+</BaseLayout>

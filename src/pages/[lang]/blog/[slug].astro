@@ -1,0 +1,77 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import BlogPostLayout from "../../../layouts/BlogPostLayout.astro";
+import { getCollection, type CollectionEntry } from "astro:content";
+import { resolvePostImage } from "../../../lib/resolvePostImage";
+import { absUrl, supportedLang, type Lang, SITE } from "../../../lib/site";
+import { alternatesAndCanonical, buildJsonLdArticle } from "../../../lib/seo";
+import { undefined } from "astro:schema";
+
+export async function getStaticPaths() {
+  const paths: Array<{ params: { lang: Lang; slug: string }; props: { post: CollectionEntry<`blog-${Lang}`>; lang: Lang } }> = [];
+  
+  for (const lang of SITE.supportedLangs) {
+    const posts = await getCollection(`blog-${lang}`);
+    for (const post of posts) {
+      if (post.data.isDraft) continue;
+
+      paths.push({
+        params: { lang, slug: post.slug },
+        props: { post, lang },
+      });
+    }
+  }
+  return paths;
+}
+
+const lang = supportedLang(Astro.params.lang);
+
+const { post } = Astro.props as { post: CollectionEntry<`blog-${Lang}`>; lang: Lang };
+const { Content } = await post.render();
+
+const urlPathNoLang = `/blog/${post.slug}/`;
+const { alternates, canonicalPath } = alternatesAndCanonical(urlPathNoLang, lang);
+
+// 🔥 thumbnailは image module を取得
+const thumbnailModule =
+  post.data.thumbnail
+    ? resolvePostImage(
+        post.slug,
+        lang,
+        post.data.thumbnail
+      )
+    : null;
+
+// 🔥 OGP用に .src を使う
+const thumbnailUrl = thumbnailModule?.src ?? null;
+
+const ogImagePath = post.data.thumbnail;
+const ogImageAbs = ogImagePath?.startsWith("http") ? ogImagePath : ogImagePath ? absUrl(ogImagePath) : undefined;
+
+const jsonLd = buildJsonLdArticle({
+  lang,
+  urlPath: canonicalPath,
+  headline: post.data.title,
+  description: post.data.description,
+  datePublished: post.data.date.toString(),
+  dateModified: post.data.updated?.toString() ?? post.data.date.toString(),
+  imageUrl: thumbnailUrl,
+});
+---
+
+<BaseLayout
+  lang={lang}
+  title={`${post.data.title} | J-IMPACT`}
+  description={post.data.description}
+  ogType="article"
+  thumbnail={thumbnailUrl}
+  canonicalPath={canonicalPath}
+  alternates={alternates}
+  jsonLd={jsonLd}
+>
+  <BlogPostLayout
+    post={post}
+    Content={Content}
+    thumbnailUrl={thumbnailUrl}
+  />
+</BaseLayout>

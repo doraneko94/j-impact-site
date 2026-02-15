@@ -1,0 +1,108 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import BlogPostLayout from "../../../layouts/BlogPostLayout.astro";
+import { getCollection, type CollectionEntry } from "astro:content";
+import { resolvePostImage } from "../../../lib/resolvePostImage";
+import { SITE, supportedLang, type Lang } from "../../../lib/site";
+import { alternatesFor, alternatesAndCanonical } from "../../../lib/seo";
+import { buildJsonLdWebsite } from "../../../lib/seo";
+import { CATEGORIES } from "../../../data/categories";
+
+export async function getStaticPaths() {
+  const paths: Array<{ params: { lang: Lang; slug: string }; props: { post: CollectionEntry<`blog-${Lang}`>; lang: Lang } }> = [];
+  
+  for (const lang of SITE.supportedLangs) {
+    const posts = await getCollection(`blog-${lang}`);
+    for (const post of posts) {
+      if (post.data.isDraft) continue;
+
+      paths.push({
+        params: { lang, slug: post.slug },
+        props: { post, lang },
+      });
+    }
+  }
+  return paths;
+}
+
+const lang = supportedLang(Astro.params.lang);
+
+const posts = (await getCollection(`blog-${lang}` as any)) as CollectionEntry<`blog-${Lang}`>[];
+
+const visiblePosts = posts
+  .filter((p) => !p.data.isDraft)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+//const urlPathNoLang = `/blog/`;
+//const alternates = alternatesFor(lang, urlPathNoLang);
+//const canonicalPath = `/${lang}${urlPathNoLang}`;
+const { alternates, canonicalPath } = alternatesAndCanonical("blog", lang);
+
+const title_lang = lang === "ja" ? "技術ブログ" : "Tech Blog";
+const title = `${title_lang} | J-IMPACT`;
+const description =
+  lang === "ja"
+    ? "J-IMPACTの技術記事・研究ノート・開発ログ"
+    : "Technical articles, research notes, and development logs by J-IMPACT.";
+const read_more = lang === "ja" ? "続きをみる" : "read more";
+const jsonLd = buildJsonLdWebsite({ lang, urlPath: canonicalPath, name: title, description  });
+---
+
+<BaseLayout
+  lang={lang}
+  title={title}
+  description={description}
+  ogType="website"
+  canonicalPath={canonicalPath}
+  alternates={alternates}
+  jsonLd={jsonLd}>
+
+<section class="section container">
+  <h1 class="page-title">{title_lang}</h1>
+
+  <div class="post-grid">
+    {visiblePosts.map((post) => {
+      const thumbnailModule =
+        post.data.thumbnail
+          ? resolvePostImage(
+              post.slug,
+              lang,
+              post.data.thumbnail
+            )
+          : null;
+
+      const thumbnailUrl = thumbnailModule?.src ?? null;
+
+      const category_lang = CATEGORIES[post.data.category];
+      const categoryLabel = lang === "ja" ? category_lang.ja : category_lang.en;
+
+      return (
+        <a class="post-card" href={`/${lang}/blog/${post.slug}/`}>
+          <div class="post-card__image">
+          {thumbnailUrl && (
+            <img
+              src={thumbnailUrl}
+              alt={post.data.title}
+              loading="lazy"
+            />
+          )}
+          </div>
+
+          <div class="post-card__content">
+            <div class="post-card__meta">
+              <span class="category-badge">
+                {categoryLabel}
+              </span>
+            </div>
+
+            <h3 class="post-card__title">{post.data.title}</h3>
+            <p class="post-card__description">{post.data.description}</p>
+            <span class="read-more">{read_more}</span>
+          </div>
+        </a>
+      );
+    })}
+  </div>
+</section>
+
+</BaseLayout>

@@ -1,6 +1,8 @@
 // src/lib/resolvePostImage.ts
 
+import type { CollectionEntry } from "astro:content";
 import { postImages } from "./imageRegistry";
+import { supportedLang, type Lang } from "./site";
 
 /**
  * 記事画像を解決する
@@ -24,4 +26,12 @@ export function resolvePostImage(
     (postImages as any)[sharedKey];
 
   return module?.default ?? null;
+}
+
+export function resolveThumbnail(
+  post: CollectionEntry<`blog-${Lang}`>,
+  lang: Lang,
+): string | null {
+  if (!post.data.thumbnail) return null;
+  return resolvePostImage(post.slug, lang, post.data.thumbnail).src
 }
