@@ -22,9 +22,25 @@ const blogMeta = commonMeta.extend({
 
 const pageMeta = commonMeta;
 
+const bookMeta = commonMeta.extend({
+  cover: z.string(),
+  price: z.string().optional(),
+  audience: z.array(z.string()).optional(),
+  benefits: z.array(z.string()).optional(),
+  links: z.array(
+    z.object({
+      label: z.string(),
+      url: z.string(),
+      type: z.enum(["main", "sub"]).default("sub")
+    })
+  ).optional(),
+});
+
 export const collections = {
   "blog-ja": defineCollection({ type: "content", schema: blogMeta }),
   "blog-en": defineCollection({ type: "content", schema: blogMeta }),
   "page-ja": defineCollection({ type: "content", schema: pageMeta }),
   "page-en": defineCollection({ type: "content", schema: pageMeta }),
+  "book-ja": defineCollection({ type: "content", schema: bookMeta }),
+  "book-en": defineCollection({ type: "content", schema: bookMeta }),
 }

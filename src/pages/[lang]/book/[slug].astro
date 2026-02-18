@@ -1,0 +1,123 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import BlogPostLayout from "../../../layouts/BlogPostLayout.astro";
+import { getCollection, type CollectionEntry } from "astro:content";
+import { resolvePostImage } from "../../../lib/resolvePostImage";
+import { absUrl, supportedLang, type Lang, SITE } from "../../../lib/site";
+import { alternatesAndCanonical, buildJsonLdArticle } from "../../../lib/seo";
+import { undefined } from "astro:schema";
+
+export async function getStaticPaths() {
+  const paths: Array<{ params: { lang: Lang; slug: string }; props: { book: CollectionEntry<`book-${Lang}`>; lang: Lang } }> = [];
+  
+  for (const lang of SITE.supportedLangs) {
+    const books = await getCollection(`book-${lang}`);
+    for (const book of books) {
+      if (book.data.isDraft) continue;
+
+      paths.push({
+        params: { lang, slug: book.slug },
+        props: { book, lang },
+      });
+    }
+  }
+  return paths;
+}
+
+const lang = supportedLang(Astro.params.lang);
+
+const { book } = Astro.props as { book: CollectionEntry<`book-${Lang}`>; lang: Lang };
+const { Content } = await book.render();
+
+const urlPathNoLang = `/book/${book.slug}/`;
+const { alternates, canonicalPath } = alternatesAndCanonical(urlPathNoLang, lang);
+
+const ogImagePath = book.data.cover;
+const ogImageAbs = ogImagePath?.startsWith("http") ? ogImagePath : ogImagePath ? absUrl(ogImagePath) : undefined;
+
+const jsonLd = buildJsonLdArticle({
+  lang,
+  urlPath: canonicalPath,
+  headline: book.data.title,
+  description: book.data.description,
+  datePublished: book.data.date.toString(),
+  dateModified: book.data.updated?.toString() ?? book.data.date.toString(),
+  imageUrl: ogImagePath,
+});
+---
+
+<BaseLayout
+  lang={lang}
+  title={`${book.data.title} | J-IMPACT`}
+  description={book.data.description}
+  ogType="article"
+  canonicalPath={canonicalPath}
+  alternates={alternates}
+  jsonLd={jsonLd}
+>
+  <div class="container book-detail">
+  <div class="book-layout">
+    <div class="book-cover">
+      <img src={book.data.cover} alt={book.data.title}/>
+    </div>
+
+    <div class="book-info">
+      <h1>{book.data.title}</h1>
+      {book.data.price && (
+        <div class="book-price-large">{book.data.price}</div>
+      )}
+
+      {book.data.links && (
+        <div class="book-buttons">
+          {book.data.links.map(link=>(
+            <a href={link.url}
+              class={`btn ${link.type==="main"?"primary":"secondary"}`}
+              target="_blank">
+              {link.label}
+            </a>
+          ))}
+        </div>
+      )}
+
+      {book.data.audience && (
+        <div class="book-section">
+          <h3>対象読者</h3>
+          <ul>
+            {book.data.audience.map(a=>(
+              <li>{a}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {book.data.benefits && (
+        <div class="book-section">
+          <h3>この本で得られること</h3>
+          <ul>
+            {book.data.benefits.map(b=>(
+              <li>{b}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div class="book-description">
+        <Content />
+      </div>
+
+      {/* 下部再CTA */}
+      {book.data.links && (
+        <div class="book-buttons bottom">
+          {book.data.links.map(link=>(
+            <a href={link.url}
+              class={`btn ${link.type==="main"?"primary":"secondary"}`}
+              target="_blank">
+              {link.label}
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+  </div>
+</BaseLayout>

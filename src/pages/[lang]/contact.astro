@@ -1,0 +1,82 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { SITE, supportedLang } from "../../lib/site";
+import { alternatesAndCanonical } from "../../lib/seo";
+
+export async function getStaticPaths() {
+  return SITE.supportedLangs.map((lang) => ({
+    params: { lang },
+  }));
+}
+
+const lang = supportedLang(Astro.params.lang);
+const { alternates, canonicalPath } = alternatesAndCanonical("", lang);
+---
+
+<BaseLayout
+  lang={lang}
+  title="お問い合わせ | J-IMPACT"
+  description="J-IMPACTへのお問い合わせはこちらから"
+  canonicalPath={canonicalPath}
+  alternates={alternates}
+>
+
+<section class="section container contact-page">
+
+  <h1 class="page-title">お問い合わせ</h1>
+
+  <p class="contact-lead">
+    技術的なご質問、書籍に関するお問い合わせ、その他のご連絡は以下のフォームよりお願いいたします。
+  </p>
+
+  <form
+    class="contact-form"
+    action="https://formspree.io/f/your_id"
+    method="POST"
+  >
+    <input
+      type="text"
+      name="company"
+      style="display:none"
+      tabindex="-1"
+      autocomplete="off"
+    />
+
+    <div class="form-group">
+      <label for="name">お名前</label>
+      <input type="text" id="name" name="name" required />
+    </div>
+
+    <div class="form-group">
+      <label for="email">メールアドレス</label>
+      <input type="email" id="email" name="email" required />
+    </div>
+
+    <div class="form-group">
+    <label for="category">お問い合わせ種別</label>
+    <select id="category" name="category" required>
+      <option value="">選択してください</option>
+      <option value="book">書籍に関するお問い合わせ</option>
+      <option value="product">製品・基板に関する問い合わせ</option>
+      <option value="blog">技術記事に関するお問い合わせ</option>
+      <option value="lecture">講演・執筆依頼</option>
+      <option value="media">メディア・取材</option>
+      <option value="collaboration">技術協業・共同研究</option>
+      <option value="other">その他</option>
+    </select>
+    </div>
+
+    <div class="form-group">
+      <label for="message">お問い合わせ内容</label>
+      <textarea id="message" name="message" rows="6" required></textarea>
+    </div>
+
+    <button type="submit" class="contact-submit">
+      送信する
+    </button>
+
+  </form>
+
+</section>
+
+</BaseLayout>

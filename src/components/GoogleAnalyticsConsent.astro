@@ -1,0 +1,74 @@
+---
+// src/components/GoogleAnalyticsConsent.astro
+const GA_ID = "G-9HCJ6WLQ3S";
+---
+
+<script is:inline>
+  // Google Consent Mode: set defaults to DENIED (EU/UK opt-in)
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+
+  // Default: deny everything non-essential
+  gtag('consent', 'default', {
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    analytics_storage: 'denied',
+    functionality_storage: 'granted',
+    security_storage: 'granted'
+  });
+</script>
+
+<script type="module">
+  import { readConsent } from "/js/consent.js";
+
+  const GA_ID = "${GA_ID}";
+  let gaLoaded = false;
+
+  function loadGA() {
+    if (gaLoaded) return;
+    gaLoaded = true;
+
+    const s = document.createElement("script");
+    s.async = true;
+    s.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+    document.head.appendChild(s);
+
+    s.onload = () => {
+      // config after script loads
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ dataLayer.push(arguments); }
+      window.gtag = gtag;
+
+      gtag("js", new Date());
+      // IP anonymisation (note: GA4 handles IP differently; keep this for defence-in-depth)
+      gtag("config", GA_ID, { anonymize_ip: true });
+    };
+  }
+
+  function updateConsent(analytics) {
+    // Update consent flags
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    window.gtag = window.gtag || gtag;
+
+    window.gtag("consent", "update", {
+      analytics_storage: analytics ? "granted" : "denied",
+      // keep ads denied (you can change later if you add ads)
+      ad_storage: "denied",
+      ad_user_data: "denied",
+      ad_personalization: "denied"
+    });
+
+    if (analytics) loadGA();
+  }
+
+  // Apply at start
+  const c = readConsent();
+  if (c) updateConsent(!!c.analytics);
+
+  // React to changes
+  window.addEventListener("jimpact-consent-updated", (e) => {
+    updateConsent(!!e.detail?.analytics);
+  });
+</script>

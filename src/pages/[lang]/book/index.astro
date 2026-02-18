@@ -1,0 +1,105 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { getCollection, type CollectionEntry } from "astro:content";
+import { resolvePostImage } from "../../../lib/resolvePostImage";
+import { SITE, supportedLang, type Lang } from "../../../lib/site";
+import { alternatesAndCanonical } from "../../../lib/seo";
+import { buildJsonLdWebsite } from "../../../lib/seo";
+
+export async function getStaticPaths() {
+  const paths: Array<{ params: { lang: Lang; slug: string }; props: { post: CollectionEntry<`book-${Lang}`>; lang: Lang } }> = [];
+  
+  for (const lang of SITE.supportedLangs) {
+    const posts = await getCollection(`book-${lang}`);
+    for (const post of posts) {
+      if (post.data.isDraft) continue;
+
+      paths.push({
+        params: { lang, slug: post.slug },
+        props: { post, lang },
+      });
+    }
+  }
+  return paths;
+}
+
+const lang = supportedLang(Astro.params.lang);
+
+const posts = (await getCollection(`book-${lang}` as any)) as CollectionEntry<`book-${Lang}`>[];
+
+const books = posts
+  .filter((p) => !p.data.isDraft)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+//const urlPathNoLang = `/blog/`;
+//const alternates = alternatesFor(lang, urlPathNoLang);
+//const canonicalPath = `/${lang}${urlPathNoLang}`;
+const { alternates, canonicalPath } = alternatesAndCanonical("book", lang);
+
+const title_lang = lang === "ja" ? "書籍一覧" : "Books";
+const title = `${title_lang} | J-IMPACT`;
+const description =
+  lang === "ja"
+    ? "J-IMPACT（日本電算術研究所）が発行する実装主義の技術書一覧。組込みRust、ソフトウェア無線、信号処理など、理論を現実のシステムへ落とし込むための実践的な知見をまとめています。"
+    : "A collection of implementation-focused technical books by J-IMPACT. Covering embedded Rust, software-defined radio, and signal processing, each title translates theory into working systems for engineers who build.";
+//const read_more = lang === "ja" ? "続きをみる" : "read more";
+const jsonLd = buildJsonLdWebsite({ lang, urlPath: canonicalPath, name: title, description  });
+---
+
+<BaseLayout
+  lang={lang}
+  title={title}
+  description={description}
+  ogType="website"
+  canonicalPath={canonicalPath}
+  alternates={alternates}
+  jsonLd={jsonLd}>
+
+<section class="section container">
+  <h1 class="page-title">{title_lang}</h1>
+
+  <div class="post-grid">
+    {books.map((book) => {
+      const primary = book.data.links?.find(l=>l.type==="main");
+
+      return (
+        <div class="post-card">
+          <a href={`/${lang}/book/${book.slug}`}>
+            <div class="post-card__image">
+              <img src={book.data.cover} alt={book.data.title} loading="lazy" />
+            </div>
+          </a>
+
+          <div class="post-card__content">
+            <h3 class="post-card__title">{book.data.title}</h3>
+
+            {book.data.price && (
+              <div class="book-price">{book.data.price}</div>
+            )}
+
+
+            <p class="post-card__description">{book.data.description}</p>
+            
+            {book.data.benefits && (
+              <ul class="book-benefits">
+                {book.data.benefits.slice(0, 3).map(b=>(
+                  <li>{b}</li>
+                ))}
+              </ul>
+            )}
+
+            <div class="book-actions">
+              {primary && (
+                <a href={primary.url} class="btn primary" target="_blank">
+                  Buy Now
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+</section>
+
+</BaseLayout>

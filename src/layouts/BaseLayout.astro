@@ -5,6 +5,9 @@ import type { OgType } from "../lib/seo";
 import flagJa from "../assets/images/flag-ja.svg";
 import flagEn from "../assets/images/flag-en.svg";
 import { undefined } from "astro:schema";
+import GoogleAnalyticsConsent from "../components/GoogleAnalyticsConsent.astro";
+import CookieConsent from "../components/CookieConsent.astro";
+import "../styles/cookie-consent.css";
 
 export type Alternates = Partial<Record<Lang, string>>;
 
@@ -93,6 +96,8 @@ const x_url = `https://x.com/${account}`;
   {jsonLd && (
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   )}
+
+  <GoogleAnalyticsConsent />
 </head>
 
 <body>
@@ -105,7 +110,7 @@ const x_url = `https://x.com/${account}`;
 
     <div class="nav-right">
       <div class="nav-cta">
-        <a href={`/${lang}/books`} class="cta-books">{get_book}</a>
+        <a href={`/${lang}/book`} class="cta-books">{get_book}</a>
       </div>
 
       <!-- ハンバーガートグル -->
@@ -137,6 +142,7 @@ const x_url = `https://x.com/${account}`;
 
 <main>
   <slot />
+  <CookieConsent lang={lang} />
 </main>
 
 <footer class="site-footer">
@@ -162,7 +168,7 @@ const x_url = `https://x.com/${account}`;
     <div class="footer-links">
       <a href={`/${lang}/about`}>{aboutus}</a>
       <a href={`/${lang}/blog`}>{blog}</a>
-      <a href={`/${lang}/books`}>{book}</a>
+      <a href={`/${lang}/book`}>{book}</a>
       <a href={`/${lang}/contact`}>{contact}</a>
     </div>
 
@@ -170,7 +176,8 @@ const x_url = `https://x.com/${account}`;
     <div class="footer-policies">
       <a href={`/${lang}/page/terms-of-use`}>{lang === "ja" ? "ご利用条件" : "Terms of Use"}</a>
       <a href={`/${lang}/page/privacy`}>{lang === "ja" ? "プライバシー・ポリシー" : "Privacy Policy"}</a>
-      <a href={`/${lang}/page/cookies`}>{lang === "ja" ? "クッキー・ポリシー" : "Cookie Policy"}</a>
+      <a href={`/${lang}/page/cookie`}>{lang === "ja" ? "クッキー・ポリシー" : "Cookie Policy"}</a>
+      <a href="#" id="open-cookie-settings">{lang === "ja" ? "プライバシー設定" : "Privacy Settings"}</a>
     </div>
 
     <div class="footer-copy">
@@ -179,6 +186,14 @@ const x_url = `https://x.com/${account}`;
 
   </div>
 </footer>
-
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const link = document.getElementById("open-cookie-settings");
+    link?.addEventListener("click", (e) => {
+      e.preventDefault();
+      window.JIMPACT_openCookieSettings?.();
+    });
+  });
+</script>
 </body>
 </html>
