@@ -1,0 +1,175 @@
+---
+title: "Re:VIEW Starterの英語化"
+description: "オペアンプ開発の視点で、製造プロセスと基板設計に効く設計Tipsをまとめます。"
+date: 2024-12-01
+category: "others"
+tags: ["tips"]
+thumbnail: "thumbnail.jpg"
+---
+
+## config.yml
+
+```yml
+language: ja
+...
+additional:
+  # 技書博では発行責任者とその連絡先が必須になった。
+  # 詳しくはこのページを参照：
+  # https://esa-pages.io/p/sharing/13039/posts/115/7fbe936149a836eac678.html#奥付の記載
+  - key:     発行者   # サークル名ではなく個人名（ペンネーム可）
+    value:   
+  - key:     連絡先   # メールアドレス推奨
+    value:
+      - mail@example.com
+```
+
+```yml
+language: en
+...
+additional:
+  # 技書博では発行責任者とその連絡先が必須になった。
+  # 詳しくはこのページを参照：
+  # https://esa-pages.io/p/sharing/13039/posts/115/7fbe936149a836eac678.html#奥付の記載
+  - key:     Author   # サークル名ではなく個人名（ペンネーム可）
+    value:   
+  - key:     Contact   # メールアドレス推奨
+    value:
+      - mail@example.com
+```
+
+## locale.yml
+
+あまり効かない。
+
+```yml
+# -*- coding: utf-8 -*-
+locale: ja
+#chapter_postfix: "　"
+chapter_postfix: ""
+
+equation: 式
+```
+
+```yml
+# -*- coding: utf-8 -*-
+locale: en
+#chapter_postfix: "　"
+chapter_postfix: ""
+
+equation: Eq.
+```
+
+## webstyle.css
+
+```css
+div.chapterauthor::before {
+	content: "［著］";
+}
+```
+
+```css
+div.chapterauthor::before {
+	content: "[Author]";
+}
+```
+
+## mytitlepage.sty
+
+styにベタ打ちされた日本語を翻訳。
+
+```tex
+\def\render@bookauthor{\@render@who{著}{\book@author}}            % 著者
+\def\render@booktranslator{\@render@who{訳}{\book@translator}}    % 翻訳者
+\def\render@booksupervisor{\@render@who{監修}{\book@supervisor}}  % 監修者
+```
+
+```tex
+\def\render@bookauthor{\@render@who{Author}{\book@author}}            % 著者
+\def\render@booktranslator{\@render@who{Translator}{\book@translator}}    % 翻訳者
+\def\render@booksupervisor{\@render@who{Supervisor}{\book@supervisor}}  % 監修者
+```
+
+```tex
+%%%
+%%% タイトルページ（大扉）の、次のページ
+%%%
+\newcommand{\mytitlenextpage}{{%
+  \thispagestyle{empty}       % ページ番号やヘッダーをなくす
+  \setlength{\parindent}{0pt} % 段落先頭のインデントをなくす
+  \vspace*{\fill}      % 縦方向の長いスペース（ページ先頭なので「*」が必要）
+  \small               % フォントを小さく
+
+  {\gtfamily\bfseries ■免責}\\
+  本書は情報の提供のみを目的としています。\\
+  本書の内容を実行・適用・運用したことで何が起きようとも、それは実行・適用・運用した人自身の責任であり、著者や関係者はいかなる責任も負いません。\\
+
+  {\gtfamily\bfseries ■商標}\\
+  本書に登場するシステム名や製品名は、関係各社の商標または登録商標です。\\
+  また本書では、{\texttrademark}、{\textregistered}、{\textcopyright}などのマークは省略しています。\\
+
+  %%% 挿絵を入れる場合
+  %\includegraphics[width=0.7\textwidth]{images/illust.png}
+}}
+```
+
+```tex
+%%%
+%%% タイトルページ（大扉）の、次のページ
+%%%
+\newcommand{\mytitlenextpage}{{%
+  \thispagestyle{empty}       % ページ番号やヘッダーをなくす
+  \setlength{\parindent}{0pt} % 段落先頭のインデントをなくす
+  \vspace*{\fill}      % 縦方向の長いスペース（ページ先頭なので「*」が必要）
+  \small               % フォントを小さく
+
+  {\gtfamily\bfseries ■ Disclaimer}\\
+  This book is provided for informational purposes only.\\
+  Any actions taken based on the content of this book — including its execution, application or operation — are undertaken entirely at the reader's own risk.\\
+  The author and all related parties accept no responsibility or liability for any consequences arising from the use of the information contained herein.\\
+
+  {\gtfamily\bfseries ■ Trademarks}\\
+  All system names and product names mentioned in this book are trademarks or registered trademarks of their respective companies.\\
+  The symbols {\texttrademark}, {\textregistered} and {\textcopyright} have been omitted throughout the text.\\
+
+  %%% 挿絵を入れる場合
+  %\includegraphics[width=0.7\textwidth]{images/illust.png}
+}}
+```
+
+## starter-misc.sty
+
+@<seqref>で節名を囲む「」（かぎかっこ）を英語対応（""）に変更
+
+```tex
+%%% @<hd>{} や @<subsec>{} で、節や項へのリンクを作成
+%%% （config.yml で「chapterlink: true」の設定が必要）
+\newcommand{\startersecref}[2]{%
+  「\hyperref[#2]{#1}」(p.\pageref{#2})%     % 節や項のタイトルがリンク
+  %{#1}(\hyperref[#2]{p.\pageref{#2}})%  % ページ番号がリンク
+}
+\newcommand{\startersubsecref}[2]{%
+  「\hyperref[#2]{{\startersubsectionsymbol}#1}」(p.\pageref{#2})%     % 節や項のタイトルがリンク
+  %{\startersubsectionsymbol}{#1}(\hyperref[#2]{p.\pageref{#2}})%  % ページ番号がリンク
+}
+\newcommand{\startersubsubsecref}[2]{%
+  「\hyperref[#2]{#1}」(p.\pageref{#2})%     % 節や項のタイトルがリンク
+  %{#1}(\hyperref[#2]{p.\pageref{#2}})%  % ページ番号がリンク
+}
+```
+
+```tex
+%%% @<hd>{} や @<subsec>{} で、節や項へのリンクを作成
+%%% （config.yml で「chapterlink: true」の設定が必要）
+\newcommand{\startersecref}[2]{%
+  "\hyperref[#2]{#1}" (p.\pageref{#2})%     % 節や項のタイトルがリンク
+  %{#1}(\hyperref[#2]{p.\pageref{#2}})%  % ページ番号がリンク
+}
+\newcommand{\startersubsecref}[2]{%
+  "\hyperref[#2]{{\startersubsectionsymbol}#1}" (p.\pageref{#2})%     % 節や項のタイトルがリンク
+  %{\startersubsectionsymbol}{#1}(\hyperref[#2]{p.\pageref{#2}})%  % ページ番号がリンク
+}
+\newcommand{\startersubsubsecref}[2]{%
+  "\hyperref[#2]{#1}" (p.\pageref{#2})%     % 節や項のタイトルがリンク
+  %{#1}(\hyperref[#2]{p.\pageref{#2}})%  % ページ番号がリンク
+}
+```

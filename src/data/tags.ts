@@ -30,5 +30,9 @@ export const TAGS = {
   pico: {
     ja: "Raspberry Pi Pico",
     en: "Raspberry Pi Pico",
+  },
+  tips: {
+    ja: "Tips",
+    en: "Tips"
   }
 } as const;

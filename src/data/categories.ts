@@ -20,8 +20,8 @@ export const CATEGORIES: Record<string, CategoryInfo> = {
     ja: "理論研究",
     en: "Research Review",
   },
-  products: {
-    ja: "製品・書籍",
-    en: "Products & Books",
+  others: {
+    ja: "お知らせ・その他",
+    en: "News & Others",
   },
 } as const;
